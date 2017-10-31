@@ -19,7 +19,7 @@
  * blacklist uio_pruss
  */
 
-#include "am33xx-pruss-rproc.dtsi"
+/* #include "am33xx-pruss-rproc.dtsi" */
 
 /*
  * /etc/modprobe.d/pruss-blacklist.conf
@@ -64,4 +64,68 @@
 
 &mac {
 	status = "disabled";
+};
+
+&am33xx_pinmux {
+	mcasp0_pins: mcasp0_pins {
+		pinctrl-single,pins = <
+			0x190 (PIN_OUTPUT_PULLDOWN | MUX_MODE0)	/* mcasp0_aclkx */ /* P9_31 */
+			0x194 (PIN_OUTPUT_PULLDOWN | MUX_MODE0)	/* mcasp0_fsx*/ /* P9_29 */
+			0x19C (PIN_OUTPUT_PULLDOWN | MUX_MODE2) /* mcasp0_arx2 */ /* P9_28 */
+		>;
+	};
+	mcasp1_pins: mcasp1_pins {
+		pinctrl-single,pins = <
+			0x1a0 (PIN_INPUT_PULLDOWN | MUX_MODE3) /* MCASP1_ACLKX */ /* P9_42 */
+			0x1a4 (PIN_INPUT_PULLDOWN | MUX_MODE3) /* MCASP1_FSX */ /* P9_27 */
+			0x1a8 (PIN_OUTPUT_PULLDOWN | MUX_MODE3)/* MCASP1_AXR0 */ /* P9_41 */
+		>;
+	};
+};
+ 
+&mcasp0 {
+		#sound-dai-cells = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&mcasp0_pins>;
+		status = "okay";
+		op-mode = <0>;          /* MCASP_IIS_MODE */
+		tdm-slots = <2>;
+		/* 16 serializer */
+		serial-dir = <  /* 0: INACTIVE, 1: TX, 2: RX */
+			0 0 1 0
+		>;
+		tx-num-evt = <32>;
+		rx-num-evt = <32>;
+};
+
+&mcasp1 {
+	#sound-dai-cells = <0>;
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&mcasp1_pins>;
+	status = "okay";
+	op-mode = <0>;          /* MCASP_IIS_MODE */
+	tdm-slots = <2>;
+	/* 4 serializer */
+	serial-dir = <  /* 0: INACTIVE, 1: TX, 2: RX */
+		1 0 0 0
+	>;
+	tx-num-evt = <32>;
+	rx-num-evt = <32>;
+};
+
+/ {
+ 
+	pcm5102a: pcm5102a {
+		#sound-dai-cells = <0>;
+		compatible = "ti,pcm5102a";
+	};
+ 
+	sound {
+		compatible = "ti,pcm5102a-evm-audio";
+		ti,model = "TI PCM5102A";
+		ti,audio-codec = <&pcm5102a>;
+		ti,mcasp-controller = <&mcasp0>;
+		ti,codec-clock-rate = <24000000>;
+	};
+ 
 };
